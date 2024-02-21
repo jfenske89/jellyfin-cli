@@ -15,7 +15,7 @@ test:
 	go test -v ./...
 
 compile:
-	go build -o ./bin/jellyfin-cli internal/cmd/jellyfin-cli/main.go
+	go build -o ./bin/jellyfin-cli ./internal/cmd/jellyfin-cli
 
 lint:
 	golangci-lint run --verbose
