@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -18,7 +17,7 @@ import (
 
 type JellyfinApiClient interface {
 	// ListSessions return a list of active sessions
-	ListSessions(context.Context) ([]Session, error)
+	ListSessions(context.Context, map[string]string) ([]Session, error)
 }
 
 type jellyfinApiClientImpl struct {
@@ -42,8 +41,14 @@ func NewJellyfinApiClient(config JellyfinApiConfig, logger *zap.SugaredLogger) J
 	}
 }
 
-func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context) ([]Session, error) {
-	if response, err := c.makeRequest(ctx, http.MethodGet, "Sessions", nil, nil); err != nil {
+func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context, getParameters map[string]string) ([]Session, error) {
+	if response, err := c.makeRequest(
+		ctx,
+		http.MethodGet,
+		c.appendGetParameters("Sessions", getParameters),
+		nil,
+		nil,
+	); err != nil {
 		return nil, err
 	} else {
 		defer response.Body.Close()
@@ -55,10 +60,25 @@ func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context) ([]Session, er
 			c.logger.Warnf("unexpected http result: %s", jsonBytes)
 			return nil, fmt.Errorf("failed to decode response: %w", err)
 		} else {
-			c.logger.Debugf(string(jsonBytes))
 			return sessions, nil
 		}
 	}
+}
+
+func (c *jellyfinApiClientImpl) appendGetParameters(endpoint string, getParameters map[string]string) string {
+	var result = endpoint
+
+	for key, value := range getParameters {
+		if result == endpoint {
+			result += "?"
+		} else {
+			result += "&"
+		}
+
+		result += url.QueryEscape(key) + "=" + url.QueryEscape(value)
+	}
+
+	return result
 }
 
 func (c *jellyfinApiClientImpl) makeRequest(
@@ -68,11 +88,6 @@ func (c *jellyfinApiClientImpl) makeRequest(
 	headers map[string][]string,
 	body []byte,
 ) (*http.Response, error) {
-	startedAt := time.Now()
-	defer func() {
-		c.logger.Debugf("spent %s making %s %s request", time.Since(startedAt), method, endpoint)
-	}()
-
 	if headers == nil {
 		headers = make(map[string][]string)
 	}
@@ -87,14 +102,29 @@ func (c *jellyfinApiClientImpl) makeRequest(
 
 	if url, err := c.buildUrl(endpoint); err != nil {
 		return nil, err
-	} else if request, err := http.NewRequest(method, url.String(), bytes.NewBuffer(body)); err != nil {
+	} else if request, err := http.NewRequestWithContext(
+		ctx,
+		method,
+		url.String(),
+		bytes.NewBuffer(body),
+	); err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	} else {
 		request.Header = headers
 
+		startedAt := time.Now()
 		if response, err := c.httpClient.Do(request); err != nil {
 			return response, fmt.Errorf("failed to make request: %w", err)
 		} else {
+			c.logger.Debugw(
+				"executed request",
+				"method", method,
+				"url", url.String(),
+				"duration", time.Since(startedAt).String(),
+				"status-code", response.StatusCode,
+				"content-length", response.ContentLength,
+			)
+
 			return response, nil
 		}
 	}
@@ -109,7 +139,7 @@ func (c *jellyfinApiClientImpl) buildUrl(endpoint string) (*url.URL, error) {
 	baseUrl += endpoint
 
 	if url, err := url.Parse(baseUrl); err != nil {
-		return nil, fmt.Errorf("failed to parse URL from %s: %w", os.Getenv("HOST"), err)
+		return nil, fmt.Errorf("failed to parse URL from %s: %w", baseUrl, err)
 	} else {
 		return url, nil
 	}

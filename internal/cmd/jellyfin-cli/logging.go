@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,6 +14,7 @@ func buildLogger() (*zap.SugaredLogger, zap.AtomicLevel) {
 
 	config := zap.NewProductionEncoderConfig()
 	config.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	config.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC3339)
 
 	encoder := zapcore.NewConsoleEncoder(config)
 

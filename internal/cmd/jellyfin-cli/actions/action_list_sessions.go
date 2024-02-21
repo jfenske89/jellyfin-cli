@@ -32,15 +32,18 @@ func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]s
 		output = val
 	}
 
-	var activeOnly bool
+	var getParameters = make(map[string]string)
 	if val, ok := options["active-only"]; ok && val != "" {
-		activeOnly, _ = strconv.ParseBool(val)
+		if activeOnly, _ := strconv.ParseBool(val); activeOnly {
+			getParameters["activeWithinSeconds"] = "600"
+		}
 	}
 
-	if sessions, err := e.client.ListSessions(ctx); err != nil {
+	if sessions, err := e.client.ListSessions(ctx, getParameters); err != nil {
 		return err
 	} else {
-		if activeOnly {
+		// The active only GET parameter doesn't always work
+		if _, ok := getParameters["activeWithinSeconds"]; ok {
 			sessions = slices.DeleteFunc[[]api.Session, api.Session](sessions, func(session api.Session) bool {
 				return time.Since(session.GetLastActivityDate()) > 10*time.Minute
 			})

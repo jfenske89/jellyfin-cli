@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"slices"
 
 	"codeberg.org/jfenske/jellyfin-cli/api"
 	"codeberg.org/jfenske/jellyfin-cli/internal/cmd/jellyfin-cli/actions"
@@ -39,8 +40,16 @@ func main() {
 	}
 
 	if executor != nil {
-		// TODO: parse action options (for example: --active-only or --output=json)
+		// TODO: add improved parsing logic for action options, which would be specific per action
 		options := make(map[string]string)
+		if slices.Contains(os.Args, "--active") {
+			options["active-only"] = "1"
+		}
+
+		if slices.Contains(os.Args, "--output=json") || slices.Contains(os.Args, "--json") {
+			options["output"] = "json"
+		}
+
 		if err := executor.Run(ctx, options); err != nil {
 			logger.Fatalw(
 				"failed to execute action",
