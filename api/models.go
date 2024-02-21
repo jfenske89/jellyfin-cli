@@ -13,8 +13,38 @@ type JellyfinApiConfig struct {
 	SkipSslVerify bool
 }
 
-type Session struct {
-	User   string    `json:"UserName"`
-	Device string    `json:"DeviceName"`
-	Date   time.Time `json:"LastActivityDate"`
+// Session defines a Jellyfin user session as a generic map with getters for specific fields
+type Session map[string]interface{}
+
+func (s Session) GetUserName() string {
+	return s.getString("UserName")
+}
+
+func (s Session) GetDeviceName() string {
+	return s.getString("DeviceName")
+}
+
+func (s Session) GetLastActivityDate() time.Time {
+	if rawVal, ok := s["LastActivityDate"]; ok && rawVal != nil {
+		if val, ok := rawVal.(time.Time); ok {
+			return val
+		} else if val, ok := rawVal.(string); ok {
+			// 2024-02-18T16:31:11.9906841Z
+			if result, err := time.Parse("2006-01-02T15:04:05.9999999Z", val); err == nil {
+				return result
+			}
+		}
+	}
+
+	return time.Time{}
+}
+
+func (s Session) getString(key string) string {
+	if rawVal, ok := s[key]; ok && rawVal != nil {
+		if val, ok := rawVal.(string); ok {
+			return val
+		}
+	}
+
+	return ""
 }

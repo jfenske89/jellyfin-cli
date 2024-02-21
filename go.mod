@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/spf13/viper v1.18.2
+	go.uber.org/zap v1.27.0
 )
 
 require (

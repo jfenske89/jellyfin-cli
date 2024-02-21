@@ -12,6 +12,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type JellyfinApiClient interface {
@@ -22,9 +24,10 @@ type JellyfinApiClient interface {
 type jellyfinApiClientImpl struct {
 	config     JellyfinApiConfig
 	httpClient *http.Client
+	logger     *zap.SugaredLogger
 }
 
-func NewJellyfinApiClient(config JellyfinApiConfig) JellyfinApiClient {
+func NewJellyfinApiClient(config JellyfinApiConfig, logger *zap.SugaredLogger) JellyfinApiClient {
 	return &jellyfinApiClientImpl{
 		config: config,
 		httpClient: &http.Client{
@@ -35,6 +38,7 @@ func NewJellyfinApiClient(config JellyfinApiConfig) JellyfinApiClient {
 			},
 			Timeout: 30 * time.Second,
 		},
+		logger: logger,
 	}
 }
 
@@ -48,8 +52,10 @@ func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context) ([]Session, er
 		if jsonBytes, err := io.ReadAll(response.Body); err != nil {
 			return nil, fmt.Errorf("failed to read response: %w", err)
 		} else if err = json.Unmarshal(jsonBytes, &sessions); err != nil {
+			c.logger.Warnf("unexpected http result: %s", jsonBytes)
 			return nil, fmt.Errorf("failed to decode response: %w", err)
 		} else {
+			c.logger.Debugf(string(jsonBytes))
 			return sessions, nil
 		}
 	}
@@ -62,6 +68,11 @@ func (c *jellyfinApiClientImpl) makeRequest(
 	headers map[string][]string,
 	body []byte,
 ) (*http.Response, error) {
+	startedAt := time.Now()
+	defer func() {
+		c.logger.Debugf("spent %s making %s %s request", time.Since(startedAt), method, endpoint)
+	}()
+
 	if headers == nil {
 		headers = make(map[string][]string)
 	}

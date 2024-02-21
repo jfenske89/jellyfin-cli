@@ -1,5 +1,11 @@
 ---
+logging:
+  # level is the zap logging level: DEBUG, INFO, WARN, ERROR
+  level: INFO
 api:
+  # base_url is the base URL to a Jellyfin instance 
   base_url: http://127.0.0.1:8096
+  # token is an API token for authentication
   token: secret
+  # insecure can permit insecure SSL requests
   insecure: false

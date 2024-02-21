@@ -2,23 +2,25 @@ package main
 
 import (
 	"context"
-	"log"
+	"os"
 
 	"codeberg.org/jfenske/jellyfin-cli/api"
 	"codeberg.org/jfenske/jellyfin-cli/internal/cmd/jellyfin-cli/actions"
 )
 
 func main() {
-	log.SetFlags(0)
+	logger, atom := buildLogger()
+	defer func() {
+		// ignore errors for stderr fsync
+		_ = logger.Sync()
+	}()
 
-	var config api.JellyfinApiConfig
-	if result, err := loadConfiguration(); err != nil {
-		log.Fatalf(err.Error())
-	} else {
-		config = *result
+	config, err := loadConfiguration(atom, logger)
+	if err != nil {
+		logger.Fatalf(err.Error())
 	}
 
-	client := api.NewJellyfinApiClient(config)
+	client := api.NewJellyfinApiClient(config, logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -29,17 +31,22 @@ func main() {
 
 	switch action {
 	case actions.ListSessions:
-		executor = actions.NewListSessionsExecutor(client)
+		executor = actions.NewListSessionsExecutor(client, logger)
 
 	default:
-		// TODO: show help and exit
+		usage()
+		os.Exit(0)
 	}
 
 	if executor != nil {
-		// TODO: parse action arguments
-		arguments := make(map[string]interface{})
-		if err := executor.Run(ctx, arguments); err != nil {
-			log.Fatalf("failed to %s: %s", action, err.Error())
+		// TODO: parse action options (for example: --active-only or --output=json)
+		options := make(map[string]string)
+		if err := executor.Run(ctx, options); err != nil {
+			logger.Fatalw(
+				"failed to execute action",
+				"action", action,
+				"error", err.Error(),
+			)
 		}
 	}
 }
