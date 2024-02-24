@@ -18,6 +18,9 @@ import (
 type JellyfinApiClient interface {
 	// ListSessions return a list of active sessions
 	ListSessions(context.Context, map[string]string) ([]Session, error)
+
+	// ListLibraryFolders return a list of library virtual folders
+	ListLibraryFolders(context.Context, map[string]string) ([]LibraryVirtualFolder, error)
 }
 
 type jellyfinApiClientImpl struct {
@@ -61,6 +64,30 @@ func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context, getParameters 
 			return nil, fmt.Errorf("failed to decode response: %w", err)
 		} else {
 			return sessions, nil
+		}
+	}
+}
+
+func (c *jellyfinApiClientImpl) ListLibraryFolders(ctx context.Context, getParameters map[string]string) ([]LibraryVirtualFolder, error) {
+	if response, err := c.makeRequest(
+		ctx,
+		http.MethodGet,
+		c.appendGetParameters("Library/VirtualFolders", getParameters),
+		nil,
+		nil,
+	); err != nil {
+		return nil, err
+	} else {
+		defer response.Body.Close()
+
+		var virtualFolders []LibraryVirtualFolder
+		if jsonBytes, err := io.ReadAll(response.Body); err != nil {
+			return nil, fmt.Errorf("failed to read response: %w", err)
+		} else if err = json.Unmarshal(jsonBytes, &virtualFolders); err != nil {
+			c.logger.Warnf("unexpected http result: %s", jsonBytes)
+			return nil, fmt.Errorf("failed to decode response: %w", err)
+		} else {
+			return virtualFolders, nil
 		}
 	}
 }

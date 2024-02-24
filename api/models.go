@@ -48,3 +48,6 @@ func (s Session) getString(key string) string {
 
 	return ""
 }
+
+// LibraryVirtualFolder defines a Jellyfin library virtual folder as a generic map
+type LibraryVirtualFolder map[string]interface{}

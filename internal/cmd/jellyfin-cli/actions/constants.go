@@ -1,5 +1,6 @@
 package actions
 
 const (
-	ListSessions = "list-sessions"
+	ListSessions       = "list-sessions"
+	ListLibraryFolders = "list-library-folders"
 )

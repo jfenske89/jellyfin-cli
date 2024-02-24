@@ -26,13 +26,22 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// TODO: parse CLI arguments to determine action
 	var executor actions.Executor
-	var action = actions.ListSessions
+	var action string
+
+	// TODO: add improved parsing logic for actions
+	if slices.Contains(os.Args, "list-sessions") {
+		action = actions.ListSessions
+	} else if slices.Contains(os.Args, "list-library-folders") {
+		action = actions.ListLibraryFolders
+	}
 
 	switch action {
 	case actions.ListSessions:
 		executor = actions.NewListSessionsExecutor(client, logger)
+
+	case actions.ListLibraryFolders:
+		executor = actions.NewListLibraryFoldersExecutor(client, logger)
 
 	default:
 		usage()
