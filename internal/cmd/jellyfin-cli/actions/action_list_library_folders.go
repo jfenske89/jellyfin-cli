@@ -25,12 +25,13 @@ func NewListLibraryFoldersExecutor(client api.JellyfinApiClient, logger *zap.Sug
 }
 
 func (e *listLibraryFoldersExecutorImpl) Run(ctx context.Context, options map[string]string) error {
-	var output = "text"
+	output := "text"
+
 	if val, ok := options["output"]; ok && val != "" {
 		output = val
 	}
 
-	var getParameters = make(map[string]string)
+	getParameters := make(map[string]string)
 
 	if folders, err := e.client.ListLibraryFolders(ctx, getParameters); err != nil {
 		return err
@@ -46,9 +47,9 @@ func (e *listLibraryFoldersExecutorImpl) Run(ctx context.Context, options map[st
 					"tvshows": 2,
 				}
 
-				slices.SortFunc(folders, func(a, b api.LibraryVirtualFolder) int {
-					aCollectionType := a["CollectionType"].(string)
-					bCollectionType := b["CollectionType"].(string)
+				slices.SortFunc(folders, func(a, b api.LibraryFolder) int {
+					aCollectionType := a.CollectionType()
+					bCollectionType := b.CollectionType()
 
 					aWeight := weighted[aCollectionType]
 
@@ -62,8 +63,8 @@ func (e *listLibraryFoldersExecutorImpl) Run(ctx context.Context, options map[st
 						bWeight = 9
 					}
 
-					aName := a["Name"].(string)
-					bName := b["Name"].(string)
+					aName := a.Name()
+					bName := b.Name()
 
 					aSort := fmt.Sprintf("%d#%s#%s", aWeight, aCollectionType, aName)
 					bSort := fmt.Sprintf("%d#%s#%s", bWeight, bCollectionType, bName)
@@ -76,16 +77,16 @@ func (e *listLibraryFoldersExecutorImpl) Run(ctx context.Context, options map[st
 				var lastCollectionType string
 
 				for _, folder := range folders {
-					if lastCollectionType != folder["CollectionType"].(string) {
+					if lastCollectionType != folder.CollectionType() {
 						if lastCollectionType != "" {
 							fmt.Printf("\n")
 						}
 
-						lastCollectionType = folder["CollectionType"].(string)
+						lastCollectionType = folder.CollectionType()
 						fmt.Printf("- %s:\n", lastCollectionType)
 					}
 
-					fmt.Printf("   - %s (%s)\n", folder["Name"], folder["ItemId"])
+					fmt.Printf("   - %s (%s)\n", folder.Name(), folder.ItemId())
 				}
 			}
 

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +19,7 @@ type JellyfinApiClient interface {
 	ListSessions(context.Context, map[string]string) ([]Session, error)
 
 	// ListLibraryFolders return a list of library virtual folders
-	ListLibraryFolders(context.Context, map[string]string) ([]LibraryVirtualFolder, error)
+	ListLibraryFolders(context.Context, map[string]string) ([]LibraryFolder, error)
 }
 
 type jellyfinApiClientImpl struct {
@@ -56,19 +55,15 @@ func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context, getParameters 
 	} else {
 		defer response.Body.Close()
 
-		var sessions []Session
 		if jsonBytes, err := io.ReadAll(response.Body); err != nil {
 			return nil, fmt.Errorf("failed to read response: %w", err)
-		} else if err = json.Unmarshal(jsonBytes, &sessions); err != nil {
-			c.logger.Warnf("unexpected http result: %s", jsonBytes)
-			return nil, fmt.Errorf("failed to decode response: %w", err)
 		} else {
-			return sessions, nil
+			return buildModels[Session](jsonBytes, NewSession)
 		}
 	}
 }
 
-func (c *jellyfinApiClientImpl) ListLibraryFolders(ctx context.Context, getParameters map[string]string) ([]LibraryVirtualFolder, error) {
+func (c *jellyfinApiClientImpl) ListLibraryFolders(ctx context.Context, getParameters map[string]string) ([]LibraryFolder, error) {
 	if response, err := c.makeRequest(
 		ctx,
 		http.MethodGet,
@@ -80,20 +75,16 @@ func (c *jellyfinApiClientImpl) ListLibraryFolders(ctx context.Context, getParam
 	} else {
 		defer response.Body.Close()
 
-		var virtualFolders []LibraryVirtualFolder
 		if jsonBytes, err := io.ReadAll(response.Body); err != nil {
 			return nil, fmt.Errorf("failed to read response: %w", err)
-		} else if err = json.Unmarshal(jsonBytes, &virtualFolders); err != nil {
-			c.logger.Warnf("unexpected http result: %s", jsonBytes)
-			return nil, fmt.Errorf("failed to decode response: %w", err)
 		} else {
-			return virtualFolders, nil
+			return buildModels[LibraryFolder](jsonBytes, NewLibraryFolder)
 		}
 	}
 }
 
 func (c *jellyfinApiClientImpl) appendGetParameters(endpoint string, getParameters map[string]string) string {
-	var result = endpoint
+	result := endpoint
 
 	for key, value := range getParameters {
 		if result == endpoint {
@@ -140,6 +131,7 @@ func (c *jellyfinApiClientImpl) makeRequest(
 		request.Header = headers
 
 		startedAt := time.Now()
+
 		if response, err := c.httpClient.Do(request); err != nil {
 			return response, fmt.Errorf("failed to make request: %w", err)
 		} else {

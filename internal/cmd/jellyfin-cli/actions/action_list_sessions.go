@@ -27,12 +27,12 @@ func NewListSessionsExecutor(client api.JellyfinApiClient, logger *zap.SugaredLo
 }
 
 func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]string) error {
-	var output = "text"
+	output := "text"
 	if val, ok := options["output"]; ok && val != "" {
 		output = val
 	}
 
-	var getParameters = make(map[string]string)
+	getParameters := make(map[string]string)
 	if val, ok := options["active-only"]; ok && val != "" {
 		if activeOnly, _ := strconv.ParseBool(val); activeOnly {
 			getParameters["activeWithinSeconds"] = "600"
@@ -45,7 +45,7 @@ func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]s
 		// The active only GET parameter doesn't always work
 		if _, ok := getParameters["activeWithinSeconds"]; ok {
 			sessions = slices.DeleteFunc[[]api.Session, api.Session](sessions, func(session api.Session) bool {
-				return time.Since(session.GetLastActivityDate()) > 10*time.Minute
+				return time.Since(session.LastActivityDate()) > 10*time.Minute
 			})
 		}
 
@@ -57,8 +57,8 @@ func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]s
 				fmt.Println("Sessions:")
 
 				for _, session := range sessions {
-					duration := humanize.RelTime(time.Now(), session.GetLastActivityDate(), "", "ago")
-					fmt.Printf(" - %s (%s) %s\n", session.GetUserName(), session.GetDeviceName(), duration)
+					duration := humanize.RelTime(time.Now(), session.LastActivityDate(), "", "ago")
+					fmt.Printf(" - %s (%s) %s\n", session.UserName(), session.DeviceName(), duration)
 				}
 			}
 
