@@ -6,7 +6,7 @@ import (
 	"slices"
 
 	"codeberg.org/jfenske/jellyfin-cli/api"
-	"codeberg.org/jfenske/jellyfin-cli/internal/cmd/jellyfin-cli/actions"
+	"codeberg.org/jfenske/jellyfin-cli/cmd/jellyfin-cli/actions"
 )
 
 func main() {

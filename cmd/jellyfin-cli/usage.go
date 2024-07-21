@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"codeberg.org/jfenske/jellyfin-cli/internal/cmd/jellyfin-cli/actions"
+	"codeberg.org/jfenske/jellyfin-cli/cmd/jellyfin-cli/actions"
 )
 
 func usage() {
