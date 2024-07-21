@@ -61,6 +61,16 @@ func (m *genericModel) JsonPath(path string) gjson.Result {
 	return gjson.GetBytes(m.jsonBytes, path)
 }
 
+func (m *genericModel) MarshalJSON() ([]byte, error) {
+	return m.jsonBytes, nil
+}
+
+func (m *genericModel) UnmarshalJSON(data []byte) error {
+	m.jsonBytes = data
+
+	return nil
+}
+
 func buildModels[T any](jsonBytes []byte, constructor func([]byte) T) ([]T, error) {
 	var models []T
 
