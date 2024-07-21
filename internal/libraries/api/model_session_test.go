@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"codeberg.org/jfenske/jellyfin-cli/api"
+	"codeberg.org/jfenske/jellyfin-cli/internal/libraries/api"
 )
 
 func TestSession(t *testing.T) {

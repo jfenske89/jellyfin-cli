@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"codeberg.org/jfenske/jellyfin-cli/api"
+	"codeberg.org/jfenske/jellyfin-cli/internal/libraries/api"
 )
 
 type listLibraryFoldersExecutorImpl struct {

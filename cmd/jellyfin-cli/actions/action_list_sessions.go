@@ -11,7 +11,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"go.uber.org/zap"
 
-	"codeberg.org/jfenske/jellyfin-cli/api"
+	"codeberg.org/jfenske/jellyfin-cli/internal/libraries/api"
 )
 
 type listSessionsExecutorImpl struct {

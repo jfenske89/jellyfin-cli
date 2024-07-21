@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"codeberg.org/jfenske/jellyfin-cli/api"
+	"codeberg.org/jfenske/jellyfin-cli/internal/libraries/api"
 )
 
 func loadConfiguration(atom zap.AtomicLevel, logger *zap.SugaredLogger) (api.JellyfinApiConfig, error) {
