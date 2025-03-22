@@ -60,7 +60,7 @@ func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]s
 
 			for _, session := range sessions {
 				duration := humanize.RelTime(time.Now(), session.LastActivityDate(), "", "ago")
-				fmt.Printf(" - %s (%s) %s\n", session.UserName(), session.DeviceName(), duration)
+				fmt.Printf(" - %s on %s (%s)\n", session.UserName(), session.DeviceName(), duration)
 			}
 		}
 

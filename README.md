@@ -68,14 +68,14 @@ Retrieve a list of active user sessions, showing the username, device name, and 
 #### Example Output (Plain Text)
 ```
 Sessions:
- - User name 1 (Device name 1) 3m
- - User name 2 (Device name 2) 1m
+ - User name 1 on Device name 1 (3 minutes ago)
+ - User name 2 on Device name 2 (1 minutes ago)
 ```
 
 The output displays:
 - **User name**: The name of the logged-in user.
 - **Device name**: The device being used.
-- **Last active time**: Time elapsed since last activity (`m` for minutes).
+- **Last active time**: Time elapsed since last activity.
 
 ### List Active Sessions
 
@@ -87,3 +87,25 @@ Retrieve only active sessions from the last 600 seconds (10 minutes).
 ```
 
 This filters out inactive sessions, displaying only users currently active.
+
+### List Activty
+
+Retrieve a list of activity logs, showing the a brief description of the activity and time.
+
+#### Command
+```sh
+./bin/jellyfin-cli list-activity
+```
+
+#### Example Output (Plain Text)
+```
+Activity Log:
+ - User name has disconnected from Device name (3 seconds ago)
+ - User name is playing Media title on Device name (1 minutes ago)
+ - User name is online from Device Name (2 minutes ago)
+```
+
+The output displays:
+- **User name**: The name of the user.
+- **Device name**: The device being used.
+- **Last active time**: Time elapsed since the activity.

@@ -10,6 +10,7 @@ import (
 func usage() {
 	available := []string{
 		actions.ListSessions + ": list active sessions",
+		actions.ListActivity + ": list activity",
 		actions.ListLibraryFolders + ": list library folders",
 	}
 
