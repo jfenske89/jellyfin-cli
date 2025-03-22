@@ -20,6 +20,9 @@ type JellyfinApiClient interface {
 
 	// ListLibraryFolders return a list of library virtual folders
 	ListLibraryFolders(context.Context, map[string]string) ([]LibraryFolder, error)
+
+	// ListActivityLogs return an object describing recent activity
+	ListActivityLogs(ctx context.Context, getParameters map[string]string) (ActivityLog, error)
 }
 
 type jellyfinApiClientImpl struct {
@@ -44,43 +47,84 @@ func NewJellyfinApiClient(config JellyfinApiConfig, logger *zap.SugaredLogger) J
 }
 
 func (c *jellyfinApiClientImpl) ListSessions(ctx context.Context, getParameters map[string]string) ([]Session, error) {
-	if response, err := c.makeRequest(
+	response, err := c.makeRequest(
 		ctx,
 		http.MethodGet,
 		c.appendGetParameters("Sessions", getParameters),
 		nil,
 		nil,
-	); err != nil {
-		return nil, err
-	} else {
-		defer response.Body.Close()
+	)
 
-		if jsonBytes, err := io.ReadAll(response.Body); err != nil {
-			return nil, fmt.Errorf("failed to read response: %w", err)
-		} else {
-			return buildModels[Session](jsonBytes, NewSession)
+	defer func() {
+		if response != nil {
+			response.Body.Close()
 		}
+	}()
+
+	if err != nil {
+		return nil, err
 	}
+
+	jsonBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	return buildModels(jsonBytes, NewSession)
 }
 
 func (c *jellyfinApiClientImpl) ListLibraryFolders(ctx context.Context, getParameters map[string]string) ([]LibraryFolder, error) {
-	if response, err := c.makeRequest(
+	response, err := c.makeRequest(
 		ctx,
 		http.MethodGet,
 		c.appendGetParameters("Library/VirtualFolders", getParameters),
 		nil,
 		nil,
-	); err != nil {
-		return nil, err
-	} else {
-		defer response.Body.Close()
+	)
 
-		if jsonBytes, err := io.ReadAll(response.Body); err != nil {
-			return nil, fmt.Errorf("failed to read response: %w", err)
-		} else {
-			return buildModels[LibraryFolder](jsonBytes, NewLibraryFolder)
+	defer func() {
+		if response != nil {
+			response.Body.Close()
 		}
+	}()
+
+	if err != nil {
+		return nil, err
 	}
+
+	jsonBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	return buildModels(jsonBytes, NewLibraryFolder)
+}
+
+func (c *jellyfinApiClientImpl) ListActivityLogs(ctx context.Context, getParameters map[string]string) (ActivityLog, error) {
+	response, err := c.makeRequest(
+		ctx,
+		http.MethodGet,
+		c.appendGetParameters("System/ActivityLog/Entries", getParameters),
+		nil,
+		nil,
+	)
+
+	defer func() {
+		if response != nil {
+			response.Body.Close()
+		}
+	}()
+
+	if err != nil {
+		return nil, err
+	}
+
+	jsonBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	return buildModel(jsonBytes, NewActivityLog)
 }
 
 func (c *jellyfinApiClientImpl) appendGetParameters(endpoint string, getParameters map[string]string) string {
@@ -110,43 +154,52 @@ func (c *jellyfinApiClientImpl) makeRequest(
 		headers = make(map[string][]string)
 	}
 
-	if _, ok := headers["Content-Type"]; !ok {
-		headers["Content-Type"] = []string{"application/json"}
+	defaultHeaders := map[string][]string{
+		header_content_type: {"application/json"},
+		header_emby_token:   {c.config.Token},
 	}
 
-	if _, ok := headers["X-Emby-Token"]; !ok {
-		headers["X-Emby-Token"] = []string{c.config.Token}
+	for key, val := range defaultHeaders {
+		if _, ok := headers[key]; !ok {
+			headers[key] = val
+		}
 	}
 
-	if url, err := c.buildUrl(endpoint); err != nil {
+	url, err := c.buildUrl(endpoint)
+	if err != nil {
 		return nil, err
-	} else if request, err := http.NewRequestWithContext(
+	}
+
+	request, err := http.NewRequestWithContext(
 		ctx,
 		method,
 		url.String(),
 		bytes.NewBuffer(body),
-	); err != nil {
+	)
+
+	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
-	} else {
-		request.Header = headers
-
-		startedAt := time.Now()
-
-		if response, err := c.httpClient.Do(request); err != nil {
-			return response, fmt.Errorf("failed to make request: %w", err)
-		} else {
-			c.logger.Debugw(
-				"executed request",
-				"method", method,
-				"url", url.String(),
-				"duration", time.Since(startedAt).String(),
-				"status-code", response.StatusCode,
-				"content-length", response.ContentLength,
-			)
-
-			return response, nil
-		}
 	}
+
+	request.Header = headers
+
+	startedAt := time.Now()
+
+	response, err := c.httpClient.Do(request)
+	if err != nil {
+		return response, fmt.Errorf("failed to make request: %w", err)
+	}
+
+	c.logger.Debugw(
+		"executed request",
+		"method", method,
+		"url", url.String(),
+		"duration", time.Since(startedAt).String(),
+		"status-code", response.StatusCode,
+		"content-length", response.ContentLength,
+	)
+
+	return response, nil
 }
 
 func (c *jellyfinApiClientImpl) buildUrl(endpoint string) (*url.URL, error) {
@@ -155,11 +208,10 @@ func (c *jellyfinApiClientImpl) buildUrl(endpoint string) (*url.URL, error) {
 		baseUrl += "/"
 	}
 
-	baseUrl += endpoint
-
-	if url, err := url.Parse(baseUrl); err != nil {
+	url, err := url.Parse(baseUrl + endpoint)
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse URL from %s: %w", baseUrl, err)
-	} else {
-		return url, nil
 	}
+
+	return url, nil
 }

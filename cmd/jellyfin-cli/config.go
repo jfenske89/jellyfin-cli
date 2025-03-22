@@ -19,7 +19,8 @@ func loadConfiguration(atom zap.AtomicLevel, logger *zap.SugaredLogger) (api.Jel
 
 	viper.SetDefault("api.base_url", "http://127.0.0.1:8096")
 
-	if err := viper.ReadInConfig(); err != nil {
+	err := viper.ReadInConfig()
+	if err != nil {
 		return api.JellyfinApiConfig{}, fmt.Errorf("failed to read config: %w", err)
 	}
 

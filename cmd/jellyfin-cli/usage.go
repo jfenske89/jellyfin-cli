@@ -10,6 +10,7 @@ import (
 func usage() {
 	available := []string{
 		actions.ListSessions + ": list active sessions",
+		actions.ListLibraryFolders + ": list library folders",
 	}
 
 	fmt.Printf("%s <action> [options]\n", os.Args[0])
