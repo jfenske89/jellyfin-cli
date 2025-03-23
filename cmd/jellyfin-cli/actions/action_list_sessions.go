@@ -2,10 +2,9 @@ package actions
 
 import (
 	"context"
-	"encoding/json"
+	"flag"
 	"fmt"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -26,17 +25,19 @@ func NewListSessionsExecutor(client api.JellyfinApiClient, logger *zap.SugaredLo
 	}
 }
 
-func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]string) error {
+func (e *listSessionsExecutorImpl) Run(ctx context.Context) error {
+	options := parseFlags(map[string]any{
+		"active": flag.Bool("active", false, "only list active sessions"),
+	})
+
 	output := "text"
-	if val, ok := options["output"]; ok && val != "" {
+	if val, ok := options["output"].(string); ok && val != "" {
 		output = val
 	}
 
 	getParameters := make(map[string]string)
-	if val, ok := options["active-only"]; ok && val != "" {
-		if activeOnly, _ := strconv.ParseBool(val); activeOnly {
-			getParameters["activeWithinSeconds"] = "600"
-		}
+	if val, ok := options["active"].(bool); ok && val {
+		getParameters["activeWithinSeconds"] = "600"
 	}
 
 	sessions, err := e.client.ListSessions(ctx, getParameters)
@@ -51,26 +52,18 @@ func (e *listSessionsExecutorImpl) Run(ctx context.Context, options map[string]s
 		})
 	}
 
-	switch output {
-	case "text":
-		if len(sessions) == 0 {
-			fmt.Println("No sessions")
-		} else {
-			fmt.Println("Sessions:")
+	return writeResponse(sessions, output, e.formatText)
+}
 
-			for _, session := range sessions {
-				duration := humanize.RelTime(time.Now(), session.LastActivityDate(), "", "ago")
-				fmt.Printf(" - %s on %s (%s)\n", session.UserName(), session.DeviceName(), duration)
-			}
-		}
-
-	case "json":
-		if jsonBytes, err := json.Marshal(sessions); err != nil {
-			return fmt.Errorf("failed to encode sessions: %w", err)
-		} else {
-			fmt.Println(string(jsonBytes))
-		}
+func (e *listSessionsExecutorImpl) formatText(sessions []api.Session) {
+	if len(sessions) == 0 {
+		fmt.Println("No sessions")
 	}
 
-	return nil
+	fmt.Println("Sessions:")
+
+	for _, session := range sessions {
+		duration := humanize.RelTime(time.Now(), session.LastActivityDate(), "", "ago")
+		fmt.Printf(" - %s on %s (%s)\n", session.UserName(), session.DeviceName(), duration)
+	}
 }

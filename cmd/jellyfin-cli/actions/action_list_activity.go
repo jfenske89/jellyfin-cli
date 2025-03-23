@@ -2,8 +2,9 @@ package actions
 
 import (
 	"context"
-	"encoding/json"
+	"flag"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -24,42 +25,41 @@ func NewListActivityExecutor(client api.JellyfinApiClient, logger *zap.SugaredLo
 	}
 }
 
-func (e *listActivityExecutorImpl) Run(ctx context.Context, options map[string]string) error {
-	output := "text"
+func (e *listActivityExecutorImpl) Run(ctx context.Context) error {
+	options := parseFlags(
+		map[string]any{
+			"limit": flag.Int64("limit", 0, "Limit the number of activity items"),
+		},
+	)
 
-	if val, ok := options["output"]; ok && val != "" {
+	output := "text"
+	if val, ok := options["output"].(string); ok && val != "" {
 		output = val
 	}
 
 	getParameters := make(map[string]string)
+	if val, ok := options["limit"].(int64); ok && val > 0 {
+		getParameters["limit"] = strconv.FormatInt(val, 10)
+	}
 
 	activityLog, err := e.client.ListActivityLogs(ctx, getParameters)
 	if err != nil {
 		return err
 	}
 
-	logs := activityLog.Items()
+	return writeResponse(activityLog.Items(), output, e.formatText)
+}
 
-	switch output {
-	case "text":
-		if len(logs) == 0 {
-			fmt.Println("No activity logs")
-		} else {
-			fmt.Println("Activity log:")
-
-			for _, log := range logs {
-				duration := humanize.RelTime(time.Now(), log.Date(), "", "ago")
-				fmt.Printf(" - %s (%s)\n", log.Name(), duration)
-			}
-		}
-
-	case "json":
-		if jsonBytes, err := json.Marshal(activityLog); err != nil {
-			return fmt.Errorf("failed to encode activity logs: %w", err)
-		} else {
-			fmt.Println(string(jsonBytes))
-		}
+func (e *listActivityExecutorImpl) formatText(logs []api.ActivityLogItem) {
+	if len(logs) == 0 {
+		fmt.Println("No activity logs")
+		return
 	}
 
-	return nil
+	fmt.Println("Activity log:")
+
+	for _, log := range logs {
+		duration := humanize.RelTime(time.Now(), log.Date(), "", "ago")
+		fmt.Printf(" - %s (%s)\n", log.Name(), duration)
+	}
 }

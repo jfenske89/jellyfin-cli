@@ -26,26 +26,31 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Get the command from arguments first
+	if len(os.Args) < 2 {
+		usage()
+		os.Exit(0)
+	}
+
+	// Extract the command from the first argument
+	command := os.Args[1]
+	os.Args = slices.Delete(os.Args, 1, 2)
+
+	// Get an executor for the command
 	var executor actions.Executor
 	var action string
 
-	// TODO: add improved parsing logic for actions
-	if slices.Contains(os.Args, "list-sessions") {
-		action = actions.ListSessions
-	} else if slices.Contains(os.Args, "list-activity") {
-		action = actions.ListActivity
-	} else if slices.Contains(os.Args, "list-library-folders") {
-		action = actions.ListLibraryFolders
-	}
-
-	switch action {
+	switch command {
 	case actions.ListSessions:
+		action = actions.ListSessions
 		executor = actions.NewListSessionsExecutor(client, logger)
 
 	case actions.ListActivity:
+		action = actions.ListActivity
 		executor = actions.NewListActivityExecutor(client, logger)
 
 	case actions.ListLibraryFolders:
+		action = actions.ListLibraryFolders
 		executor = actions.NewListLibraryFoldersExecutor(client, logger)
 
 	default:
@@ -53,23 +58,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	if executor != nil {
-		// TODO: add improved parsing logic for action options, which would be specific per action
-		options := make(map[string]string)
-		if slices.Contains(os.Args, "--active") {
-			options["active-only"] = "1"
-		}
-
-		if slices.Contains(os.Args, "--output=json") || slices.Contains(os.Args, "--json") {
-			options["output"] = "json"
-		}
-
-		if err := executor.Run(ctx, options); err != nil {
-			logger.Fatalw(
-				"failed to execute action",
-				"action", action,
-				"error", err.Error(),
-			)
-		}
+	err = executor.Run(ctx)
+	if err != nil {
+		logger.Fatalw(
+			"failed to execute action",
+			"action", action,
+			"error", err.Error(),
+		)
 	}
 }
