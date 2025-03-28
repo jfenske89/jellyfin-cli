@@ -58,6 +58,7 @@ func (e *listSessionsExecutorImpl) Run(ctx context.Context) error {
 func (e *listSessionsExecutorImpl) formatText(sessions []api.Session) {
 	if len(sessions) == 0 {
 		fmt.Println("No sessions")
+		return
 	}
 
 	fmt.Println("Sessions:")
