@@ -10,9 +10,11 @@ This tool can be configured with a config.yaml file. See the [example.config.yam
 
 **Possible paths**:
 
-- `/etc/jellyfin-cli/config.yaml`
-- `$HOME/.config/jellyfin-cli/config.yaml`
 - `./config.yaml`
+- `$HOME/.config/jellyfin-cli/config.yaml`
+- `/etc/jellyfin-cli/config.yaml`
+
+The first matching file is used.
 
 ## Usage
 
