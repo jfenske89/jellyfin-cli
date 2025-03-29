@@ -12,6 +12,7 @@ func usage() {
 		actions.ListSessions + ": list active sessions",
 		actions.ListActivity + ": list activity",
 		actions.ListLibraryFolders + ": list library folders",
+		actions.RefreshLibrary + ": refresh library",
 	}
 
 	fmt.Printf("%s <action> [options]\n", os.Args[0])

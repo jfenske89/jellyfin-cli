@@ -13,9 +13,9 @@ import (
 func loadConfiguration(atom zap.AtomicLevel, logger *zap.SugaredLogger) (api.JellyfinApiConfig, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/jellyfin-cli/")
-	viper.AddConfigPath("$HOME/.config/jellyfin-cli/")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME/.config/jellyfin-cli/")
+	viper.AddConfigPath("/etc/jellyfin-cli/")
 
 	viper.SetDefault("api.base_url", "http://127.0.0.1:8096")
 

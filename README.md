@@ -109,3 +109,17 @@ The output displays:
 - **User name**: The name of the user.
 - **Device name**: The device being used.
 - **Last active time**: Time elapsed since the activity.
+
+### Refresh Library
+
+Initiates a library refresh and outputs a generic response, unless there is an error.
+
+#### Command
+```sh
+./bin/jellyfin-cli library-refresh
+```
+
+#### Example Output (Plain Text)
+```
+OK
+```

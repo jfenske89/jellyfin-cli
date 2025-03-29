@@ -23,6 +23,9 @@ type JellyfinApiClient interface {
 
 	// ListActivityLogs return an object describing recent activity
 	ListActivityLogs(ctx context.Context, getParameters map[string]string) (ActivityLog, error)
+
+	// RefreshLibrary initiates a library refresh
+	RefreshLibrary(ctx context.Context) error
 }
 
 type jellyfinApiClientImpl struct {
@@ -125,6 +128,24 @@ func (c *jellyfinApiClientImpl) ListActivityLogs(ctx context.Context, getParamet
 	}
 
 	return buildModel(jsonBytes, NewActivityLog)
+}
+
+func (c *jellyfinApiClientImpl) RefreshLibrary(ctx context.Context) error {
+	response, err := c.makeRequest(
+		ctx,
+		http.MethodPost,
+		"Library/Refresh",
+		nil,
+		nil,
+	)
+
+	defer func() {
+		if response != nil {
+			response.Body.Close()
+		}
+	}()
+
+	return err
 }
 
 func (c *jellyfinApiClientImpl) appendGetParameters(endpoint string, getParameters map[string]string) string {

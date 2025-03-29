@@ -53,6 +53,10 @@ func main() {
 		action = actions.ListLibraryFolders
 		executor = actions.NewListLibraryFoldersExecutor(client, logger)
 
+	case actions.RefreshLibrary:
+		action = actions.RefreshLibrary
+		executor = actions.NewRefreshLibraryExecutor(client, logger)
+
 	default:
 		usage()
 		os.Exit(0)
