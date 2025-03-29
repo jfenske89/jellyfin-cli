@@ -116,7 +116,7 @@ Initiates a library refresh and outputs a generic response, unless there is an e
 
 #### Command
 ```sh
-./bin/jellyfin-cli library-refresh
+./bin/jellyfin-cli refresh-library
 ```
 
 #### Example Output (Plain Text)
