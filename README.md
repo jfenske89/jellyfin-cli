@@ -112,6 +112,31 @@ The output displays:
 - **Device name**: The device being used.
 - **Last active time**: Time elapsed since the activity.
 
+### Search
+
+Search for media items across all libraries.
+
+#### Command
+```sh
+./bin/jellyfin-cli search --term=<search term> [--limit=<number>]
+```
+
+#### Options
+- `--term`: Required. The search term to look for
+- `--limit`: Optional. Limit the number of results returned
+
+#### Example Output (Plain Text)
+```
+Search results:
+ - Test 123 (Movie) <b4e201fdfe51e191565aa214dbd1bf80>
+ - Testing: 123 (Movie) <01fdfe51e191565aa214dbd1bf80b4e2>
+```
+
+The output displays:
+- **Title**: The name of the media item
+- **Type**: The type of media (in parentheses)
+- **ID**: The item ID (in angle brackets)
+
 ### Refresh Library
 
 Initiates a library refresh and outputs a generic response, unless there is an error.

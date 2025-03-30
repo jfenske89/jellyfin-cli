@@ -92,6 +92,6 @@ func (e *listLibraryFoldersExecutorImpl) formatText(folders []api.LibraryFolder)
 			fmt.Printf("- %s:\n", lastCollectionType)
 		}
 
-		fmt.Printf("   - %s (%s)\n", folder.Name(), folder.ItemId())
+		fmt.Printf("   - %s <%s>\n", folder.Name(), folder.ItemId())
 	}
 }

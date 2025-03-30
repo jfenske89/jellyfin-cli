@@ -42,19 +42,18 @@ func main() {
 
 	switch command {
 	case actions.ListSessions:
-		action = actions.ListSessions
 		executor = actions.NewListSessionsExecutor(client, logger)
 
 	case actions.ListActivity:
-		action = actions.ListActivity
 		executor = actions.NewListActivityExecutor(client, logger)
 
 	case actions.ListLibraryFolders:
-		action = actions.ListLibraryFolders
 		executor = actions.NewListLibraryFoldersExecutor(client, logger)
 
+	case actions.Search:
+		executor = actions.NewSearch(client, logger)
+
 	case actions.RefreshLibrary:
-		action = actions.RefreshLibrary
 		executor = actions.NewRefreshLibraryExecutor(client, logger)
 
 	default:

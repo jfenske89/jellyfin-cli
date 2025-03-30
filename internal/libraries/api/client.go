@@ -24,6 +24,9 @@ type JellyfinApiClient interface {
 	// ListActivityLogs return an object describing recent activity
 	ListActivityLogs(ctx context.Context, getParameters map[string]string) (ActivityLog, error)
 
+	// Search return a search response
+	Search(ctx context.Context, term string, getParameters map[string]string) (SearchResponse, error)
+
 	// RefreshLibrary initiates a library refresh
 	RefreshLibrary(ctx context.Context) error
 }
@@ -130,6 +133,38 @@ func (c *jellyfinApiClientImpl) ListActivityLogs(ctx context.Context, getParamet
 	return buildModel(jsonBytes, NewActivityLog)
 }
 
+func (c *jellyfinApiClientImpl) Search(ctx context.Context, term string, getParameters map[string]string) (SearchResponse, error) {
+	if getParameters == nil {
+		getParameters = make(map[string]string)
+	}
+	getParameters["searchTerm"] = term
+
+	response, err := c.makeRequest(
+		ctx,
+		http.MethodGet,
+		c.appendGetParameters("Search/Hints", getParameters),
+		nil,
+		nil,
+	)
+
+	defer func() {
+		if response != nil {
+			response.Body.Close()
+		}
+	}()
+
+	if err != nil {
+		return nil, err
+	}
+
+	jsonBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	return buildModel(jsonBytes, NewSearchResponse)
+}
+
 func (c *jellyfinApiClientImpl) RefreshLibrary(ctx context.Context) error {
 	response, err := c.makeRequest(
 		ctx,
@@ -197,7 +232,6 @@ func (c *jellyfinApiClientImpl) makeRequest(
 		url.String(),
 		bytes.NewBuffer(body),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
