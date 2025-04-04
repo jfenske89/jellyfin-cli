@@ -117,3 +117,5 @@ fabric.properties
 # Custom
 .env
 config.yaml
+bin/
+/jellyfin-cli

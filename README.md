@@ -1,152 +1,139 @@
-# jellyfin-cli
+# Jellyfin CLI
 
-This project offers a command-line interface to Jellyfin instances.
+A command-line tool for interacting with a Jellyfin server.
 
-***Notice***: This is a work in progress side project. It has limited functionality. New features will be added slowly. 
+***Notice***: This is a side project with limited functionality. New features will be added slowly. 
+
+## Features
+
+- List active sessions
+- List library folders 
+- View activity logs
+- Search for content
+- Refresh library
+
+## Installation
+
+### From Source
+
+1. Clone the repository:
+```bash
+git clone https://github.com/jfenske89/jellyfin-cli.git
+cd jellyfin-cli
+```
+
+2. Build the application:
+```bash
+go build -o ./bin
+```
+
+3. (Optional) Install to your system:
+```bash
+go install
+```
 
 ## Configuration
 
-This tool can be configured with a config.yaml file. See the [example.config.yaml](example.config.yaml) file.
-
-**Possible paths**:
-
-- `./config.yaml`
+Create a configuration file at one of the following locations:
+- `./config.yaml` (current directory)
 - `$HOME/.config/jellyfin-cli/config.yaml`
 - `/etc/jellyfin-cli/config.yaml`
 
-The first matching file is used.
+Example configuration:
+
+```yaml
+logging:
+  # level is the logging level: DEBUG, INFO, WARN, ERROR
+  level: INFO
+
+api:
+  # base_url is the base URL to a Jellyfin instance 
+  base_url: http://127.0.0.1:8096
+  # token is an API token for authentication
+  token: your-api-token-here
+  # insecure can permit insecure SSL requests
+  insecure: false
+```
+
+## Getting an API Token
+
+To use this CLI, you need to generate an API token from your Jellyfin server:
+
+1. Go to your Jellyfin dashboard
+2. Navigate to Admin > Dashboard > Advanced > API Keys
+3. Create a new API key
+4. Copy the key to your config file
 
 ## Usage
 
-All commands follow this format:
+### General Help
 
-```shell
-./bin/jellyfin-cli <command> [options]
+```bash
+jellyfin-cli help
 ```
 
-### Global Options
+### List Sessions
 
-- `--output json` or `--json`: Outputs the response in JSON format instead of plain text. This can produce a lot of output, as it's returned unformatted directly from the Jellyfin API.
-
-## Commands
-
-### List Library Folders
-
-Retrieve a list of all library folders grouped by collection type.
-
-#### Command
-```sh
-./bin/jellyfin-cli list-library-folders
+List all sessions:
+```bash
+jellyfin-cli sessions
 ```
 
-#### Example Output (Plain Text)
-```
-Library folders:
-- movies:
-   - Library name 1 (68094783b021abd03520a299c2c85870)
-   - Library name 2 (259c2c8587096820a094783b021abd03)
-
-- tvshows:
-   - Library name 3 (a6a73b90b322532e40e44b97e68d0565)
-
-- books:
-   - Library name 4 (9515c5a412f43aeb982a99e3d6d67fec)
-
-- music:
-   - Library name 5 (7e9516eda064e319657a3c78490edccb)
+List only active sessions:
+```bash
+jellyfin-cli sessions --active
 ```
 
-Each section corresponds to a `CollectionType`, with library names followed by their respective `ItemId`.
+### List Libraries
 
-### List Sessions (Users)
-
-Retrieve a list of active user sessions, showing the username, device name, and last active time.
-
-#### Command
-```sh
-./bin/jellyfin-cli list-sessions
+List all library folders:
+```bash
+jellyfin-cli libraries
 ```
-
-#### Example Output (Plain Text)
-```
-Sessions:
- - User name 1 on Device name 1 (3 minutes ago)
- - User name 2 on Device name 2 (1 minutes ago)
-```
-
-The output displays:
-- **User name**: The name of the logged-in user.
-- **Device name**: The device being used.
-- **Last active time**: Time elapsed since last activity.
-
-### List Active Sessions
-
-Retrieve only active sessions from the last 600 seconds (10 minutes).
-
-#### Command
-```sh
-./bin/jellyfin-cli list-sessions --active
-```
-
-This filters out inactive sessions, displaying only users currently active.
-
-### List Activty
-
-Retrieve a list of activity logs, showing the a brief description of the activity and time.
-
-#### Command
-```sh
-./bin/jellyfin-cli list-activity
-```
-
-#### Example Output (Plain Text)
-```
-Activity Log:
- - User name has disconnected from Device name (3 seconds ago)
- - User name is playing Media title on Device name (1 minutes ago)
- - User name is online from Device Name (2 minutes ago)
-```
-
-The output displays:
-- **User name**: The name of the user.
-- **Device name**: The device being used.
-- **Last active time**: Time elapsed since the activity.
-
-### Search
-
-Search for media items across all libraries.
-
-#### Command
-```sh
-./bin/jellyfin-cli search --term=<search term> [--limit=<number>]
-```
-
-#### Options
-- `--term`: Required. The search term to look for
-- `--limit`: Optional. Limit the number of results returned
-
-#### Example Output (Plain Text)
-```
-Search results:
- - Test 123 (Movie) <b4e201fdfe51e191565aa214dbd1bf80>
- - Testing: 123 (Movie) <01fdfe51e191565aa214dbd1bf80b4e2>
-```
-
-The output displays:
-- **Title**: The name of the media item
-- **Type**: The type of media (in parentheses)
-- **ID**: The item ID (in angle brackets)
 
 ### Refresh Library
 
-Initiates a library refresh and outputs a generic response, unless there is an error.
-
-#### Command
-```sh
-./bin/jellyfin-cli refresh-library
+Trigger a library refresh:
+```bash
+jellyfin-cli libraries refresh
 ```
 
-#### Example Output (Plain Text)
+### Activity Logs
+
+View recent activity logs:
+```bash
+jellyfin-cli activity
 ```
-OK
+
+Limit the number of logs:
+```bash
+jellyfin-cli activity --limit 20
+```
+
+### Search
+
+Search for content:
+```bash
+jellyfin-cli search "star wars"
+```
+
+Filter by content type:
+```bash
+jellyfin-cli search "star wars" --type Movie
+```
+
+Limit search results:
+```bash
+jellyfin-cli search "star wars" --limit 5
+```
+
+### JSON Output
+
+Any command can output JSON by adding the `--json` flag:
+
+```bash
+jellyfin-cli sessions --json
+jellyfin-cli libraries --json
+jellyfin-cli activity --json
+jellyfin-cli search "star wars" --json
 ```
