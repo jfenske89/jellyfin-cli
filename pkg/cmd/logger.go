@@ -31,8 +31,14 @@ func initLogger() (*zap.SugaredLogger, zap.AtomicLevel) {
 	// Create a logger with the core
 	logger := zap.New(core)
 
+	// Set the global logger
+	zap.ReplaceGlobals(logger)
+
 	return logger.Sugar(), atom
 }
+
+// Global atomic level to store the logger level
+var globalAtomicLevel zap.AtomicLevel
 
 // updateLogLevel updates the log level based on the provided level string
 func updateLogLevel(levelStr string) {
@@ -40,12 +46,15 @@ func updateLogLevel(levelStr string) {
 	logger := zap.L().Sugar()
 
 	// Parse the level string
-	level, err := zap.ParseAtomicLevel(strings.ToUpper(levelStr))
-	if err != nil {
+	levelStr = strings.ToUpper(levelStr)
+	var level zapcore.Level
+	if err := level.UnmarshalText([]byte(levelStr)); err != nil {
 		logger.Warnw("Invalid log level, using INFO", "level", levelStr, "error", err)
 		return
 	}
 
-	// Update the global logger's level
-	zap.L().Core().Enabled(level.Level())
+	// Update the global atomic level
+	if globalAtomicLevel != (zap.AtomicLevel{}) {
+		globalAtomicLevel.SetLevel(level)
+	}
 }

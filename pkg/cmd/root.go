@@ -55,7 +55,11 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	// Initialize logger
-	logger, _ = initLogger()
+	var atomicLevel zap.AtomicLevel
+	logger, atomicLevel = initLogger()
+
+	// Set the global atomic level
+	globalAtomicLevel = atomicLevel
 	defer func() {
 		// Sync logger on exit
 		_ = logger.Sync()
@@ -85,17 +89,17 @@ func initConfig() {
 			logger.Warnw("No config file found, using defaults")
 		}
 	} else {
+		// Set Jellyfin config from viper
+		config.Jellyfin.BaseURL = viper.GetString("api.base_url")
+		config.Jellyfin.Token = viper.GetString("api.token")
+		config.Jellyfin.SkipSSLVerify = viper.GetBool("api.insecure")
+
+		// Update logger level based on config
+		config.Logging.Level = viper.GetString("logging.level")
+		updateLogLevel(config.Logging.Level)
+
 		logger.Debugw("Using config file", "file", viper.ConfigFileUsed())
 	}
-
-	// Map viper values to config struct
-	config.Jellyfin.BaseURL = viper.GetString("api.base_url")
-	config.Jellyfin.Token = viper.GetString("api.token")
-	config.Jellyfin.SkipSSLVerify = viper.GetBool("api.insecure")
-	config.Logging.Level = viper.GetString("logging.level")
-
-	// Update logger level based on config
-	updateLogLevel(config.Logging.Level)
 }
 
 // getClient returns a new Jellyfin API client using the current configuration
