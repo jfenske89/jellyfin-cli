@@ -24,7 +24,7 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "jellyfin-cli",
-	Short:   "Interact Jellyfin from the command line",
+	Short:   "Interact with Jellyfin from the command line",
 	Long:    `Jellyfin CLI is a command-line tool for interacting with a Jellyfin server.`,
 	Version: Version,
 }
