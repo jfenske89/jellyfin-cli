@@ -4,7 +4,7 @@ go 1.25.4
 
 require (
 	github.com/dustin/go-humanize v1.0.1
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	go.uber.org/zap v1.27.1
 )
